@@ -46,6 +46,16 @@ h1{font-family:var(--display);font-weight:700;font-size:40px;line-height:1;margi
 .sub{color:var(--muted);font-size:13px;margin-top:4px}
 .startctl{display:inline-flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--muted)}
 .startctl input{padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px}
+.ctlrow{display:flex;flex-wrap:wrap;gap:4px 16px}
+#athName{width:150px;font-weight:600}
+.bk{padding:12px 0 16px;display:grid;gap:10px}
+.bk p{margin:0;color:var(--muted)}
+.bk textarea{width:100%;min-height:72px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;resize:vertical;word-break:break-all}
+.bk .row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.bk label{font-size:13px;font-weight:600}
+.btn2{border:1px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:999px;padding:8px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.btn2.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.bkmsg{font-size:12px;color:var(--muted)}
 .stats{display:flex;gap:16px;font-size:13px;color:var(--muted)}
 .stats b{display:block;font-family:var(--display);font-size:24px;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
 .status{font-size:12px;color:var(--muted);min-height:16px}
@@ -116,7 +126,10 @@ details[open] summary{border-bottom:1px solid var(--line)}
     <div>
       <h1>Full Body ABC</h1>
       <div class="sub">Três treinos (A, B, C) · 2 dias de treino, 1 de descanso</div>
-      <label class="startctl" for="startDate">Comecei em <input type="date" id="startDate"></label>
+      <div class="ctlrow">
+        <label class="startctl" for="athName">Atleta <input id="athName" placeholder="Seu nome" maxlength="40" autocomplete="name"></label>
+        <label class="startctl" for="startDate">Comecei em <input type="date" id="startDate"></label>
+      </div>
     </div>
     <div class="stats">
       <div><b id="stDone">0</b>treinos feitos</div>
@@ -135,6 +148,18 @@ details[open] summary{border-bottom:1px solid var(--line)}
 
   <section class="panel" id="panel" aria-live="polite"></section>
   <div class="status" id="status"></div>
+
+  <details id="backup">
+    <summary>Copiar ou importar registros</summary>
+    <div class="bk">
+      <p>Para levar seus treinos para outro aparelho ou navegador, copie o código aqui e cole no outro lugar, neste mesmo campo.</p>
+      <div class="row"><button type="button" class="btn2" id="expBtn">Copiar código dos meus registros</button><span class="bkmsg" id="expMsg"></span></div>
+      <textarea id="expOut" readonly hidden aria-label="Código dos seus registros"></textarea>
+      <label for="impIn">Colar código recebido</label>
+      <textarea id="impIn" placeholder="Cole aqui o código ou o link de importação"></textarea>
+      <div class="row"><button type="button" class="btn2 ghost" id="impBtn">Importar</button><span class="bkmsg" id="impMsg"></span></div>
+    </div>
+  </details>
 
   <details>
     <summary>Como executar as séries</summary>
@@ -261,7 +286,7 @@ async function flush(k){
   if(writing[k]){ pending[k]=true; return; }
   writing[k]=true; status('Salvando…');
   try{
-    const body = k==='config' ? {inicio:key(START)} : JSON.parse(JSON.stringify(sessions[k]));
+    const body = k==='config' ? {inicio:key(START), nome:athlete} : JSON.parse(JSON.stringify(sessions[k]));
     await col.doc(k==='config' ? 'config' : 's-'+k).set(body);
     status('Salvo.');
   }catch(e){
@@ -362,6 +387,78 @@ function renderStats(){
 document.getElementById('prev').onclick = ()=>{ winStart = addDays(winStart,-7); render(); };
 document.getElementById('next').onclick = ()=>{ winStart = addDays(winStart,7); render(); };
 
+// ---------- nome do atleta ----------
+let athlete = '';
+const LS_NAME = 'fullbody-abc-nome';
+const nameIn = document.getElementById('athName');
+function setAthlete(n){
+  athlete = String(n||'').slice(0,40);
+  if(document.activeElement!==nameIn) nameIn.value = athlete;
+  try{ localStorage.setItem(LS_NAME, athlete); }catch(e){}
+}
+nameIn.addEventListener('input', ()=>{
+  athlete = nameIn.value.trim().slice(0,40);
+  try{ localStorage.setItem(LS_NAME, athlete); }catch(e){}
+  clearTimeout(timers.config); timers.config = setTimeout(()=>flush('config'), 800);
+});
+try{ setAthlete(localStorage.getItem(LS_NAME)||''); }catch(e){}
+
+// ---------- copiar / importar registros ----------
+function encodeData(){
+  const json = JSON.stringify({i:key(START), n:athlete||undefined, s:sessions});
+  let bin = ''; new TextEncoder().encode(json).forEach(b=>{ bin += String.fromCharCode(b); });
+  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function decodeData(code){
+  code = String(code||'').trim().replace(/^.*#importar=/,'').replace(/\s+/g,'');
+  const b64 = code.replace(/-/g,'+').replace(/_/g,'/');
+  const bin = atob(b64 + '==='.slice((b64.length+3)%4));
+  return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c=>c.charCodeAt(0))));
+}
+function mergeData(data){
+  let n = 0;
+  Object.entries((data && data.s) || {}).forEach(([k,v])=>{
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(k) || !v) return;
+    const cur = sessions[k];
+    sessions[k] = cur ? {treino:cur.treino||v.treino, feito:!!(cur.feito||v.feito), ex:Object.assign({}, v.ex||{}, cur.ex||{})} : v;
+    Object.keys(v).forEach(f=>{ if(!(f in sessions[k])) sessions[k][f] = v[f]; });
+    n++;
+  });
+  const d = parseKey(data && data.i);
+  if(d) setStart(d, true);
+  if(data && data.n && !athlete) setAthlete(data.n);
+  return n;
+}
+function importCode(code){
+  const n = mergeData(decodeData(code));
+  lsSave(); lsSaveStart();
+  if(col){ Object.keys(sessions).forEach(k=>flush(k)); flush('config'); }
+  render();
+  return n;
+}
+function importFromHash(){
+  if(!/^#importar=/.test(location.hash)) return;
+  const h = location.hash;
+  try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
+  try{ const n = importCode(h); status(n ? 'Registros importados: '+n+' treino(s).' : 'Nada para importar.'); }
+  catch(e){ status('Não foi possível importar esse link.'); }
+}
+window.addEventListener('hashchange', importFromHash);
+document.getElementById('expBtn').addEventListener('click', ()=>{
+  const code = encodeData(), out = document.getElementById('expOut'), msg = document.getElementById('expMsg');
+  out.value = code; out.hidden = false;
+  const fallback = ()=>{ out.focus(); out.select(); msg.textContent = 'Selecionado. Copie o texto acima.'; };
+  try{
+    navigator.clipboard.writeText(code).then(()=>{ msg.textContent = 'Código copiado.'; }, fallback);
+  }catch(e){ fallback(); }
+});
+document.getElementById('impBtn').addEventListener('click', ()=>{
+  const inp = document.getElementById('impIn'), msg = document.getElementById('impMsg');
+  if(!inp.value.trim()){ msg.textContent = 'Cole um código primeiro.'; return; }
+  try{ const n = importCode(inp.value); msg.textContent = n ? 'Importado: '+n+' treino(s).' : 'O código não tinha treinos.'; inp.value=''; }
+  catch(e){ msg.textContent = 'Código inválido. Confira se copiou inteiro.'; }
+});
+
 document.getElementById('startDate').addEventListener('change', e=>{
   const d = parseKey(e.target.value); if(!d) return;
   setStart(d); lsSaveStart(); render();
@@ -373,6 +470,7 @@ setStart(lsStart() || (hasOld() ? new Date(2026,10,7) : today));
 if(!lsStart() && hasOld()) lsSaveStart();
 lsSave();
 render();
+importFromHash();
 
 // ---------- registros de cada pessoa (privados) ----------
 (async ()=>{
@@ -395,6 +493,7 @@ render();
       if(d.id==='config'){
         const s = parseKey(v && v.inicio);
         if(s && +s !== +START && !writing.config && !pending.config){ setStart(s); lsSaveStart(); }
+        if(v && typeof v.nome==='string' && v.nome!==athlete && !writing.config && !pending.config && document.activeElement!==nameIn){ setAthlete(v.nome); }
       } else if(d.id.startsWith('s-')) fresh[d.id.slice(2)] = JSON.parse(JSON.stringify(v));
     });
     if(loaded && snap.empty && lsStart()){ flush('config'); }
@@ -423,6 +522,6 @@ render();
 })();
 </script>
 
-<script src="integracoes.js"></script>
+<script src="integracoes.js?v=5"></script>
 </body>
 </html>

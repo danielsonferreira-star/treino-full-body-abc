@@ -221,33 +221,81 @@
     const off = box.querySelector("#stravaOff"); if (off) off.onclick = () => { setTok(null); renderIntegrations(); renderPanel(); };
   }
 
-  // ---------- importar registros por link (#importar=...) ----------
-  function handleImport() {
-    const m = /^#importar=(.+)$/.exec(location.hash);
-    if (!m) return;
-    history.replaceState(null, "", location.pathname + location.search);
-    try {
-      const b64 = m[1].replace(/-/g, "+").replace(/_/g, "/");
-      const bin = atob(b64 + "===".slice((b64.length + 3) % 4));
-      const data = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
-      let n = 0;
-      Object.entries(data.s || {}).forEach(([k, v]) => {
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(k) || !v) return;
-        const cur = sessions[k];
-        sessions[k] = cur
-          ? { ...cur, treino: cur.treino || v.treino, feito: !!(cur.feito || v.feito), ex: Object.assign({}, v.ex || {}, cur.ex || {}) }
-          : v;
-        n++;
-      });
-      const d = parseKey(data.i);
-      if (d) { setStart(d); lsSaveStart(); }
-      lsSave(); render();
-      status(n ? "Registros importados: " + n + " treino(s)." : "Nada para importar.");
-    } catch (e) { status("Não foi possível importar esse link."); }
+  // ---------- nuvem: nome do atleta + PIN ----------
+  const LS_PIN = "fullbody-abc-pin";
+  let cloudKey = null, cloudTimer = null, cloudBusy = false, cloudAgain = false;
+  const ctl = document.querySelector(".ctlrow");
+  const pinLabel = document.createElement("label");
+  pinLabel.className = "startctl";
+  pinLabel.htmlFor = "pinIn";
+  pinLabel.innerHTML = 'PIN <input id="pinIn" type="password" inputmode="numeric" maxlength="4" placeholder="4 dígitos" autocomplete="off" style="width:88px;letter-spacing:.15em">';
+  ctl.insertBefore(pinLabel, ctl.children[1]);
+  const cloudMsg = document.createElement("div");
+  cloudMsg.className = "cloudmsg";
+  ctl.after(cloudMsg);
+  const pinIn = pinLabel.querySelector("input");
+  try { pinIn.value = localStorage.getItem(LS_PIN) || ""; } catch (e) {}
+  const setCloud = (t, err) => { cloudMsg.textContent = t; cloudMsg.classList.toggle("err", !!err); };
+  const ASK = "Preencha Atleta e um PIN de 4 dígitos para guardar seus treinos na nuvem e abrir em qualquer aparelho.";
+
+  async function keyFor(name, pin) {
+    const txt = name.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ") + "|" + pin;
+    const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("fullbody-abc|" + txt));
+    return Array.from(new Uint8Array(h)).slice(0, 20).map(b => b.toString(16).padStart(2, "0")).join("");
   }
+  async function cloudConnect() {
+    const name = (nameIn.value || athlete || "").trim(), pin = pinIn.value.trim();
+    if (!name || !/^\d{4}$/.test(pin)) { cloudKey = null; setCloud(ASK); return; }
+    try { localStorage.setItem(LS_PIN, pin); } catch (e) {}
+    const k = await keyFor(name, pin);
+    if (k === cloudKey) return;
+    cloudKey = k;
+    setCloud("Conectando à nuvem…");
+    try {
+      const r = await fetch("/api/dados/" + k, { cache: "no-store" });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || r.status);
+      if (j.data) { mergeData(j.data); origSave(); lsSaveStart(); render(); }
+      await cloudPush();
+    } catch (e) {
+      setCloud("Sem conexão com a nuvem agora. Os treinos ficam neste aparelho e sobem na próxima anotação.", true);
+    }
+  }
+  async function cloudPush() {
+    if (!cloudKey) return;
+    if (cloudBusy) { cloudAgain = true; return; }
+    cloudBusy = true;
+    try {
+      const r = await fetch("/api/dados/" + cloudKey, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ i: key(START), n: athlete || undefined, s: sessions }),
+      });
+      if (!r.ok) throw new Error(r.status);
+      setCloud("☁ Treinos salvos na nuvem às " + hhmm(new Date()) + ".");
+    } catch (e) {
+      setCloud("Não consegui salvar na nuvem agora. Tento de novo na próxima anotação.", true);
+    } finally {
+      cloudBusy = false;
+      if (cloudAgain) { cloudAgain = false; cloudPush(); }
+    }
+  }
+  const origSave = window.lsSave;
+  window.lsSave = function () {
+    origSave();
+    if (cloudKey) { clearTimeout(cloudTimer); cloudTimer = setTimeout(cloudPush, 1200); }
+  };
+  pinIn.addEventListener("input", () => {
+    pinIn.value = pinIn.value.replace(/\D/g, "").slice(0, 4);
+    if (pinIn.value.length === 4) cloudConnect(); else { cloudKey = null; setCloud(ASK); }
+  });
+  nameIn.addEventListener("change", () => { cloudKey = null; cloudConnect(); });
+  const cs = document.createElement("style");
+  cs.textContent = ".cloudmsg{font-size:12px;color:var(--muted);margin-top:6px}.cloudmsg.err{color:var(--a)}";
+  document.head.appendChild(cs);
 
   // ---------- início ----------
-  handleImport();
+  cloudConnect();
   renderIntegrations();
   renderPanel();
   api("config").then(j => { clientId = j.clientId || false; }).catch(() => { clientId = false; })
