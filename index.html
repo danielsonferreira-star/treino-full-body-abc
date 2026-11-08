@@ -225,7 +225,21 @@ function setStart(d, keepSel){
 // ---------- persistência ----------
 const LS = 'fullbody-abc-v2';
 const LS_START = 'fullbody-abc-inicio';
-function lsLoad(){ try{ return JSON.parse(localStorage.getItem(LS)||'{}'); }catch(e){ return {}; } }
+const LS_OLD = 'fullbody-abc-v1'; // registros da primeira versão (início fixo em 07/11/2026)
+function lsLoad(){
+  let v1 = {}, v2 = {};
+  try{ v1 = JSON.parse(localStorage.getItem(LS_OLD)||'{}') || {}; }catch(e){}
+  try{ v2 = JSON.parse(localStorage.getItem(LS)||'{}') || {}; }catch(e){}
+  const out = {};
+  new Set([...Object.keys(v1), ...Object.keys(v2)]).forEach(k=>{
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(k)) return;
+    const a = v1[k], b = v2[k];
+    if(a && b) out[k] = {treino:b.treino||a.treino, feito:!!(a.feito||b.feito), ex:Object.assign({}, a.ex||{}, b.ex||{})};
+    else out[k] = b || a;
+  });
+  return out;
+}
+function hasOld(){ try{ return !!localStorage.getItem(LS_OLD); }catch(e){ return false; } }
 function lsSave(){ try{ localStorage.setItem(LS, JSON.stringify(sessions)); }catch(e){} }
 function lsStart(){ try{ return parseKey(localStorage.getItem(LS_START)); }catch(e){ return null; } }
 function lsSaveStart(){ try{ localStorage.setItem(LS_START, key(START)); }catch(e){} }
@@ -351,7 +365,9 @@ document.getElementById('startDate').addEventListener('change', e=>{
 });
 
 sessions = lsLoad();
-setStart(lsStart() || today);
+setStart(lsStart() || (hasOld() ? new Date(2026,10,7) : today));
+if(!lsStart() && hasOld()) lsSaveStart();
+lsSave();
 render();
 
 // ---------- registros de cada pessoa (privados) ----------
@@ -365,7 +381,7 @@ render();
   }catch(e){ db = null; }
   if(!db || !uid){ goLocal(); return; }
   col = db.collection('data/users/'+uid);
-  let loaded = false;
+  let loaded = false, pushedLocal = false;
   const timer = setTimeout(()=>{ if(!loaded) status('Não foi possível carregar seus registros ainda. Continue anotando; fica salvo neste aparelho.'); }, 10000);
   col.onSnapshot(snap=>{
     if(!snap.metadata.fromCache){ loaded = true; clearTimeout(timer); }
@@ -378,6 +394,19 @@ render();
       } else if(d.id.startsWith('s-')) fresh[d.id.slice(2)] = JSON.parse(JSON.stringify(v));
     });
     if(loaded && snap.empty && lsStart()){ flush('config'); }
+    // registros que só existem neste aparelho sobem para a conta (uma vez por carregamento)
+    if(loaded && !pushedLocal){
+      pushedLocal = true;
+      Object.keys(sessions).forEach(k=>{
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(k) || !sessions[k]) return;
+        const remote = fresh[k];
+        if(!remote){ fresh[k] = sessions[k]; flush(k); }
+        else {
+          const merged = {treino:remote.treino||sessions[k].treino, feito:!!(remote.feito||sessions[k].feito), ex:Object.assign({}, sessions[k].ex||{}, remote.ex||{})};
+          if(JSON.stringify(merged) !== JSON.stringify(remote)){ fresh[k] = merged; sessions[k] = merged; flush(k); }
+        }
+      });
+    }
     // mantém o que está sendo digitado
     Object.keys(timers).forEach(k=>{ if(k!=='config' && sessions[k] && (writing[k]||pending[k])) fresh[k]=sessions[k]; });
     const typing = document.activeElement && document.activeElement.tagName==='INPUT';

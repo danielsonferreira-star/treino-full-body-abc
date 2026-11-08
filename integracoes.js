@@ -221,7 +221,33 @@
     const off = box.querySelector("#stravaOff"); if (off) off.onclick = () => { setTok(null); renderIntegrations(); renderPanel(); };
   }
 
+  // ---------- importar registros por link (#importar=...) ----------
+  function handleImport() {
+    const m = /^#importar=(.+)$/.exec(location.hash);
+    if (!m) return;
+    history.replaceState(null, "", location.pathname + location.search);
+    try {
+      const b64 = m[1].replace(/-/g, "+").replace(/_/g, "/");
+      const bin = atob(b64 + "===".slice((b64.length + 3) % 4));
+      const data = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
+      let n = 0;
+      Object.entries(data.s || {}).forEach(([k, v]) => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(k) || !v) return;
+        const cur = sessions[k];
+        sessions[k] = cur
+          ? { ...cur, treino: cur.treino || v.treino, feito: !!(cur.feito || v.feito), ex: Object.assign({}, v.ex || {}, cur.ex || {}) }
+          : v;
+        n++;
+      });
+      const d = parseKey(data.i);
+      if (d) { setStart(d); lsSaveStart(); }
+      lsSave(); render();
+      status(n ? "Registros importados: " + n + " treino(s)." : "Nada para importar.");
+    } catch (e) { status("Não foi possível importar esse link."); }
+  }
+
   // ---------- início ----------
+  handleImport();
   renderIntegrations();
   renderPanel();
   api("config").then(j => { clientId = j.clientId || false; }).catch(() => { clientId = false; })
