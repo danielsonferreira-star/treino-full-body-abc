@@ -85,13 +85,13 @@
     if (s.inicio) start = new Date(s.inicio);
     else if (+d === +today) start = new Date(Date.now() - dur * 60000);
     else start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 19, 0);
-    const lines = W[w].map(([n]) => {
+    const lines = flatEx(w).map(([n]) => {
       const e = s.ex[slug(n)];
       if (!e || (!e.kg && !e.reps)) return null;
       return n + ": " + (e.kg ? e.kg + " kg" : "—") + " × " + (e.reps || "—");
     }).filter(Boolean);
     return {
-      name: NAMES[w],
+      name: NAMES[w] + (PROFILE !== "geral" ? " · " + PROFILES[PROFILE].label : ""),
       sport_type: "WeightTraining",
       type: "WeightTraining",
       start_date_local: localISO(start),
@@ -240,15 +240,18 @@
 
   async function keyFor(name, pin) {
     const txt = name.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ") + "|" + pin;
-    const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("fullbody-abc|" + txt));
+    // o treino Geral mantém a chave antiga; os outros têm chave própria
+    const base = PROFILE === "geral" ? "fullbody-abc|" : "fullbody-abc|" + PROFILE + "|";
+    const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(base + txt));
     return Array.from(new Uint8Array(h)).slice(0, 20).map(b => b.toString(16).padStart(2, "0")).join("");
   }
   async function cloudConnect() {
     const name = (nameIn.value || athlete || "").trim(), pin = pinIn.value.trim();
     if (!name || !/^\d{4}$/.test(pin)) { cloudKey = null; setCloud(ASK); return; }
     try { localStorage.setItem(LS_PIN, pin); } catch (e) {}
+    const prof = PROFILE;
     const k = await keyFor(name, pin);
-    if (k === cloudKey) return;
+    if (k === cloudKey || prof !== PROFILE) return;
     cloudKey = k;
     setCloud("Conectando à nuvem…");
     try {
@@ -269,7 +272,7 @@
       const r = await fetch("/api/dados/" + cloudKey, {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ i: key(START), n: athlete || undefined, s: sessions }),
+        body: JSON.stringify({ p: PROFILE, i: key(START), n: athlete || undefined, s: sessions }),
       });
       if (!r.ok) throw new Error(r.status);
       setCloud("☁ Treinos salvos na nuvem às " + hhmm(new Date()) + ".");
@@ -290,6 +293,7 @@
     if (pinIn.value.length === 4) cloudConnect(); else { cloudKey = null; setCloud(ASK); }
   });
   nameIn.addEventListener("change", () => { cloudKey = null; cloudConnect(); });
+  window.onProfileChange = () => { cloudKey = null; clearTimeout(cloudTimer); cloudConnect(); };
   const cs = document.createElement("style");
   cs.textContent = ".cloudmsg{font-size:12px;color:var(--muted);margin-top:6px}.cloudmsg.err{color:var(--a)}";
   document.head.appendChild(cs);

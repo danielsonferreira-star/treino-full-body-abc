@@ -121,15 +121,59 @@ details[open] summary{border-bottom:1px solid var(--line)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
-<div class="wrap">
+<style>
+/* escolha do treino + conjugado */
+.chooser{max-width:760px;margin:0 auto;padding-block:40px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+.chooser h1{font-size:44px}
+.chooser .lead{color:var(--muted);margin:6px 0 0;font-size:15px}
+.cards{display:grid;gap:12px}
+.pcard{display:flex;align-items:center;gap:16px;text-align:left;width:100%;padding:16px 18px;border:1px solid var(--line);border-radius:16px;background:var(--surface-glass);-webkit-backdrop-filter:blur(1.5px);backdrop-filter:blur(1.5px);color:var(--ink);font:inherit;cursor:pointer}
+.pcard:hover{border-color:var(--ink)}
+.pcard:focus-visible{outline:2px solid var(--b);outline-offset:2px}
+.pcard .plate{width:58px;height:58px;font-size:28px}
+.pcard .plate.dan{background:var(--a)} .pcard .plate.viv{background:var(--b)} .pcard .plate.ger{background:var(--c)}
+.pcard h2{font-family:var(--display);font-size:30px;margin:0;line-height:1;text-transform:uppercase}
+.pcard p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.pcard .go{margin-left:auto;font-size:22px;color:var(--muted)}
+.switch{border:1px solid var(--line);background:var(--surface-glass);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;margin-top:10px}
+.switch:focus-visible{outline:2px solid var(--b);outline-offset:2px}
+li.conj{grid-template-columns:28px minmax(0,1fr)}
+.conjhead{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.conjhead b{color:var(--ink)}
+.conjpart{display:grid;gap:2px;padding:10px 0 0 12px;border-left:2px solid var(--line);margin-top:10px}
+.conjpart .log{grid-column:auto;margin-top:6px}
+.howbtn{margin-left:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:3px 10px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;vertical-align:1px}
+.howbtn[aria-expanded="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.howbtn:focus-visible{outline:2px solid var(--b);outline-offset:2px}
+.how{grid-column:2;display:grid;gap:8px;margin-top:10px}
+.conjpart .how{grid-column:auto}
+.how .pics{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.how figure{margin:0;min-width:0}
+.how img{width:100%;max-width:100%;border-radius:8px;display:block;aspect-ratio:3/2;object-fit:cover;background:var(--line)}
+.how figcaption{font-size:11px;color:var(--muted);margin-top:3px}
+.how .note{font-size:12px;color:var(--ink)}
+.how .links{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:11px;color:var(--muted)}
+.how a{font-size:13px;font-weight:600;color:var(--b);text-decoration:none}
+</style>
+
+<section class="chooser" id="chooser" hidden aria-label="Escolha do treino">
+  <div>
+    <h1>Full Body ABC</h1>
+    <p class="lead">Escolha o treino. Cada um guarda seus próprios registros.</p>
+  </div>
+  <div class="cards" id="cards"></div>
+</section>
+
+<div class="wrap" id="app" hidden>
   <header>
     <div>
-      <h1>Full Body ABC</h1>
-      <div class="sub">Três treinos (A, B, C) · 2 dias de treino, 1 de descanso</div>
+      <h1 id="title">Full Body ABC</h1>
+      <div class="sub" id="subtitle">Três treinos (A, B, C) · 2 dias de treino, 1 de descanso</div>
       <div class="ctlrow">
         <label class="startctl" for="athName">Atleta <input id="athName" placeholder="Seu nome" maxlength="40" autocomplete="name"></label>
         <label class="startctl" for="startDate">Comecei em <input type="date" id="startDate"></label>
       </div>
+      <button type="button" class="switch" id="switchBtn">⇄ Trocar treino</button>
     </div>
     <div class="stats">
       <div><b id="stDone">0</b>treinos feitos</div>
@@ -152,7 +196,7 @@ details[open] summary{border-bottom:1px solid var(--line)}
   <details id="backup">
     <summary>Copiar ou importar registros</summary>
     <div class="bk">
-      <p>Para levar seus treinos para outro aparelho ou navegador, copie o código aqui e cole no outro lugar, neste mesmo campo.</p>
+      <p>Para levar os registros deste treino para outro aparelho ou navegador, copie o código aqui e cole no outro lugar, neste mesmo campo.</p>
       <div class="row"><button type="button" class="btn2" id="expBtn">Copiar código dos meus registros</button><span class="bkmsg" id="expMsg"></span></div>
       <textarea id="expOut" readonly hidden aria-label="Código dos seus registros"></textarea>
       <label for="impIn">Colar código recebido</label>
@@ -179,56 +223,68 @@ details[open] summary{border-bottom:1px solid var(--line)}
         <li>Série válida com alta intensidade e execução controlada.</li>
         <li>Nos exercícios básicos, 0 a 1 repetição na reserva (RIR) na série válida.</li>
         <li>Não é preciso levar todas as séries à falha.</li>
+        <li>Conjugado: faça os dois exercícios em sequência, sem descanso entre eles; descanse só no fim do par.</li>
         <li>Prioridade: progressão de carga e repetições.</li>
         <li>Bateu o número de repetições da válida com boa execução: aumente a carga na próxima sessão.</li>
         <li>Anote carga e repetições da série válida.</li>
-        <li>Evite aumentar volume sem necessidade. Priorize qualidade, recuperação e progressão.</li>
       </ul>
     </div>
   </details>
 </div>
 
 <script>
-let START = null; // data de início escolhida por cada pessoa
+let START = null;
 const CYCLE = ['A','B',null,'C','A',null,'B','C',null];
 const NAMES = {A:'Full Body A',B:'Full Body B',C:'Full Body C'};
-// [nome, séries] — série: [tipo, reps]; tipo AQ | P | V
-const W = {
-  A:[
-    ['Agachamento livre',[['AQ',12],['P',8],['V',6]]],
-    ['Stiff barra livre',[['P',12],['P',10],['V',8]]],
-    ['Supino inclinado convergente',[['AQ',12],['P',10],['V',8]]],
-    ['Remada curvada barra guiada',[['AQ',12],['P',10],['V',8]]],
-    ['Desenvolvimento convergente',[['P',10],['V',8]]],
-    ['Rosca direta barra W',[['P',10],['V',8]]],
-    ['Tríceps testa barra W',[['P',10],['V',8]]],
-    ['Gêmeos em pé',[['P',20],['P',15],['V',12]]],
-  ],
-  B:[
-    ['Leg press',[['AQ',15],['P',10],['V',8]]],
-    ['Flexora deitada',[['AQ',15],['P',12],['V',10]]],
-    ['Supino reto com halteres',[['AQ',12],['P',10],['V',8]]],
-    ['Puxador frontal pegada pronada',[['AQ',12],['P',10],['V',8]]],
-    ['Elevação lateral',[['P',15],['P',12],['V',10]]],
-    ['Rosca Scott',[['P',12],['V',10]]],
-    ['Tríceps no pulley',[['P',12],['V',10]]],
-    ['Gêmeos sentado',[['P',25],['P',20],['V',15]]],
-  ],
-  C:[
-    ['Agachamento hack',[['AQ',12],['P',10],['V',8]]],
-    ['Elevação pélvica',[['P',12],['P',10],['V',8]]],
-    ['Flexora sentada',[['P',12],['V',10]]],
-    ['Chest press',[['AQ',12],['P',10],['V',8]]],
-    ['Remada sentada articulada',[['AQ',12],['P',10],['V',8]]],
-    ['Peck deck inverso',[['P',12],['V',10]]],
-    ['Rosca martelo com halteres',[['P',12],['V',10]]],
-    ['Tríceps francês com halter',[['P',12],['V',10]]],
-  ]
+// séries: [tipo, reps] com tipo AQ | P | V. Item: ['Nome', séries] ou {c:[[nome, séries],[nome, séries]], nota}
+const S = {
+  aq12_8_6:[['AQ',12],['P',8],['V',6]], aq12_10_8:[['AQ',12],['P',10],['V',8]], aq15_10_8:[['AQ',15],['P',10],['V',8]],
+  aq15_12_10:[['AQ',15],['P',12],['V',10]], p12_10_8:[['P',12],['P',10],['V',8]], p10_8:[['P',10],['V',8]], p12_10:[['P',12],['V',10]],
+  p15_12:[['P',15],['V',12]], p15_12_10:[['P',15],['P',12],['V',10]], p20_15_12:[['P',20],['P',15],['V',12]],
+  p18_15_12:[['P',18],['P',15],['V',12]], p25_20_15:[['P',25],['P',20],['V',15]], p20_15:[['P',20],['V',15]]
 };
+const PROFILES = {
+  danielson:{label:'Danielson', mark:'D', cls:'dan', title:'Treino Danielson', nome:'Danielson',
+    sub:'Exercícios do Simon · 6 aparelhos por dia · conjugado de braço',
+    W:{
+      A:[['Agachamento Smith',S.aq12_8_6],['Mesa flexora',S.aq15_12_10],['Supino máquina neutro',S.aq12_10_8],['Puxada articulada supinada',S.aq12_10_8],['Desenvolvimento máquina',S.p10_8],
+         {c:[['Rosca direta cross barra W',S.p12_10],['Tríceps pulley',S.p12_10]], nota:'Mesma polia: só troque o pegador'}],
+      B:[['Leg 45',S.aq15_10_8],['Cadeira flexora',S.aq15_12_10],['Supino inclinado com dumbbell',S.aq12_10_8],['Remada baixa fechada sentada',S.aq12_10_8],['Elevação lateral máquina',S.p15_12_10],
+         {c:[['Rosca alternada',S.p12_10],['Tríceps testa corda cross',S.p12_10]], nota:'Halteres ao lado do cross'}],
+      C:[['Hack',S.aq12_10_8],['Pantu em pé',S.p20_15_12],['Supino articulado inclinado',S.aq12_10_8],['Remada supinada articulada',S.aq12_10_8],['Crucifixo inverso máquina',S.p12_10],
+         {c:[['Rosca martelo alternada sentado',S.p12_10],['Paralela + banco',S.p12_10]], nota:'Halteres e banco, sem máquina'}]
+    }},
+  viviane:{label:'Viviane', mark:'V', cls:'viv', title:'Treino Viviane', nome:'Viviane',
+    sub:'Exercícios do Simon · 6 aparelhos por dia · foco em glúteo e perna',
+    // fotos de execução (Free Exercise DB, domínio público) + observação quando a foto difere do aparelho
+    imgs:{'agachamento-hack':'','elevacao-pelve-maquina':'A foto é com barra livre; na máquina o movimento é o mesmo.','abdutora':'','supino-teto-articulado':'',
+      'puxada-aberta':'','elevacao-lateral':'','leg-45':'','mesa-flexora':'','adutora':'','remada-baixa-fechada':'','desenvolvimento-maquina':'',
+      'rosca-direta-cross':'','triceps-pulley':'','afundo-smith':'Na foto o pé de trás está apoiado no banco; no afundo ele fica no chão.',
+      'cadeira-flexora':'','panturrilha-em-pe':'','abdomen-reto-chao':''},
+    W:{
+      A:[['Agachamento hack',S.aq12_10_8],['Elevação pelve máquina',S.p12_10_8],['Abdutora',S.p15_12],['Supino teto articulado',S.aq12_10_8],['Puxada aberta',S.aq12_10_8],['Elevação lateral',S.p15_12_10]],
+      B:[['Leg 45',S.aq15_10_8],['Mesa flexora',S.aq15_12_10],['Adutora',S.p15_12],['Remada baixa fechada',S.aq12_10_8],['Desenvolvimento máquina',S.p12_10],
+         {c:[['Rosca direta cross',S.p12_10],['Tríceps pulley',S.p12_10]], nota:'Mesma polia: só troque o pegador'}],
+      C:[['Afundo Smith',S.aq12_10_8],['Cadeira flexora',S.aq15_12_10],['Panturrilha em pé',S.p18_15_12],['Supino teto articulado',S.aq12_10_8],['Remada baixa fechada',S.p12_10],['Abdômen reto chão',S.p20_15]]
+    }},
+  geral:{label:'Geral', mark:'G', cls:'ger', title:'Full Body ABC', nome:'',
+    sub:'Treino para os amigos · 8 exercícios por dia',
+    W:{
+      A:[['Agachamento livre',S.aq12_8_6],['Stiff barra livre',S.p12_10_8],['Supino inclinado convergente',S.aq12_10_8],['Remada curvada barra guiada',S.aq12_10_8],['Desenvolvimento convergente',S.p10_8],['Rosca direta barra W',S.p10_8],['Tríceps testa barra W',S.p10_8],['Gêmeos em pé',S.p20_15_12]],
+      B:[['Leg press',S.aq15_10_8],['Flexora deitada',S.aq15_12_10],['Supino reto com halteres',S.aq12_10_8],['Puxador frontal pegada pronada',S.aq12_10_8],['Elevação lateral',S.p15_12_10],['Rosca Scott',S.p12_10],['Tríceps no pulley',S.p12_10],['Gêmeos sentado',S.p25_20_15]],
+      C:[['Agachamento hack',S.aq12_10_8],['Elevação pélvica',S.p12_10_8],['Flexora sentada',S.p12_10],['Chest press',S.aq12_10_8],['Remada sentada articulada',S.aq12_10_8],['Peck deck inverso',S.p12_10],['Rosca martelo com halteres',S.p12_10],['Tríceps francês com halter',S.p12_10]]
+    }}
+};
+const LS_PROFILE = 'fullbody-abc-perfil';
+let PROFILE = null, W = PROFILES.geral.W;
+// lista plana de exercícios (o conjugado vira dois)
+function flatEx(w){ const out=[]; (W[w]||[]).forEach(it=>{ if(it.c) it.c.forEach(x=>out.push(x)); else out.push(it); }); return out; }
+
 const LABEL = {AQ:'AQ',P:'PREP',V:'VÁLIDA'};
 const DOW = ['dom','seg','ter','qua','qui','sex','sáb'];
 const DOWL = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
 const slug = s => s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 const dayMs = 86400000;
 const atMidnight = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -240,8 +296,8 @@ const workoutOf = d => { const i = diffDays(d, START); return i < 0 ? undefined 
 
 const today = atMidnight(new Date());
 const parseKey = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s||''); return m ? new Date(+m[1], +m[2]-1, +m[3]) : null; };
-let selected, winStart;
-let sessions = {}; // key -> {treino, feito, ex:{slug:{kg,reps}}}
+let selected = today, winStart = today;
+let sessions = {}; // data -> {treino, feito, ex:{slug:{kg,reps}}}
 let db = null, col = null;
 
 function setStart(d, keepSel){
@@ -251,14 +307,18 @@ function setStart(d, keepSel){
   winStart = addDays(START, Math.floor(Math.max(0,diffDays(selected, START))/7)*7);
 }
 
-// ---------- persistência ----------
-const LS = 'fullbody-abc-v2';
-const LS_START = 'fullbody-abc-inicio';
-const LS_OLD = 'fullbody-abc-v1'; // registros da primeira versão (início fixo em 07/11/2026)
+// ---------- persistência (separada por treino) ----------
+// O treino Geral mantém as chaves antigas, para não perder o que já foi anotado.
+const sfx = () => PROFILE==='geral' ? '' : '-'+PROFILE;
+const lsKey = () => 'fullbody-abc-v2'+sfx();
+const lsStartKey = () => 'fullbody-abc-inicio'+sfx();
+const lsNameKey = () => 'fullbody-abc-nome'+sfx();
+const LS_OLD = 'fullbody-abc-v1';
+const docId = k => k==='config' ? (PROFILE==='geral' ? 'config' : 'config-'+PROFILE) : (PROFILE==='geral' ? 's-'+k : PROFILE+'-s-'+k);
 function lsLoad(){
   let v1 = {}, v2 = {};
-  try{ v1 = JSON.parse(localStorage.getItem(LS_OLD)||'{}') || {}; }catch(e){}
-  try{ v2 = JSON.parse(localStorage.getItem(LS)||'{}') || {}; }catch(e){}
+  if(PROFILE==='geral'){ try{ v1 = JSON.parse(localStorage.getItem(LS_OLD)||'{}') || {}; }catch(e){} }
+  try{ v2 = JSON.parse(localStorage.getItem(lsKey())||'{}') || {}; }catch(e){}
   const out = {};
   new Set([...Object.keys(v1), ...Object.keys(v2)]).forEach(k=>{
     if(!/^\d{4}-\d{2}-\d{2}$/.test(k)) return;
@@ -268,34 +328,35 @@ function lsLoad(){
   });
   return out;
 }
-function hasOld(){ try{ return !!localStorage.getItem(LS_OLD); }catch(e){ return false; } }
-function lsSave(){ try{ localStorage.setItem(LS, JSON.stringify(sessions)); }catch(e){} }
-function lsStart(){ try{ return parseKey(localStorage.getItem(LS_START)); }catch(e){ return null; } }
-function lsSaveStart(){ try{ localStorage.setItem(LS_START, key(START)); }catch(e){} }
+function hasOld(){ if(PROFILE!=='geral') return false; try{ return !!localStorage.getItem(LS_OLD); }catch(e){ return false; } }
+function lsSave(){ try{ localStorage.setItem(lsKey(), JSON.stringify(sessions)); }catch(e){} }
+function lsStart(){ try{ return parseKey(localStorage.getItem(lsStartKey())); }catch(e){ return null; } }
+function lsSaveStart(){ try{ localStorage.setItem(lsStartKey(), key(START)); }catch(e){} }
 const status = t => { document.getElementById('status').textContent = t; };
 function goLocal(){ col = null; status('Seus registros ficam salvos neste aparelho.'); }
 
 const pending = {}; const writing = {}; const timers = {};
 function queueSave(k){
   clearTimeout(timers[k]);
-  timers[k] = setTimeout(()=>flush(k), 700);
+  timers[k] = setTimeout(()=>{ delete timers[k]; flush(k); }, 700);
 }
 async function flush(k){
   lsSave();
   if(!col){ status('Salvo neste aparelho.'); return; }
-  if(writing[k]){ pending[k]=true; return; }
-  writing[k]=true; status('Salvando…');
+  const id = docId(k);
+  if(writing[id]){ pending[id]=true; return; }
+  writing[id]=true; status('Salvando…');
   try{
     const body = k==='config' ? {inicio:key(START), nome:athlete} : JSON.parse(JSON.stringify(sessions[k]));
-    await col.doc(k==='config' ? 'config' : 's-'+k).set(body);
+    await col.doc(id).set(body);
     status('Salvo.');
   }catch(e){
     if(e && e.code==='unavailable'){ setTimeout(()=>flush(k), 800+Math.random()*800); }
     else if(e && e.code==='invalid_argument') goLocal();
     else status('Não foi possível salvar agora. O registro ficou neste aparelho.');
   }finally{
-    writing[k]=false;
-    if(pending[k]){ pending[k]=false; flush(k); }
+    writing[id]=false;
+    if(pending[id]){ pending[id]=false; flush(k); }
   }
 }
 
@@ -320,13 +381,44 @@ function renderStrip(){
 }
 
 function lastFor(w, s, beforeKey){
-  const keys = Object.keys(sessions).filter(k=>k<beforeKey && sessions[k].treino===w).sort().reverse();
+  const keys = Object.keys(sessions).filter(k=>k<beforeKey && sessions[k] && sessions[k].treino===w).sort().reverse();
   for(const k of keys){ const v = sessions[k].ex && sessions[k].ex[s]; if(v && (v.kg!=null && v.kg!=='' || v.reps!=null && v.reps!=='')) return {k, ...v}; }
   return null;
 }
 
 function nextWorkout(from){
   for(let i=0;i<10;i++){ const d=addDays(from,i), w=workoutOf(d); if(w) return {d,w}; }
+}
+
+function exBlock(name, sets, s, w, k){
+  const id = slug(name);
+  const cur = (s.ex && s.ex[id]) || {};
+  const val = sets.find(x=>x[0]==='V')[1];
+  const last = lastFor(w, id, k);
+  const lastTxt = last ? 'Última ('+fmt(new Date(last.k+'T12:00'))+'): '+(last.kg!==''&&last.kg!=null?esc(last.kg)+' kg':'—')+' × '+(last.reps!==''&&last.reps!=null?esc(last.reps):'—') : 'Sem registro anterior';
+  const up = last && +last.reps >= val ? '<span class="up">↑ bateu '+val+' reps: suba a carga</span>' : '';
+  const imgs = PROFILES[PROFILE].imgs, hasImg = !!imgs && id in imgs;
+  const how = hasImg ? '<div class="how" id="how-'+id+'" data-name="'+esc(name)+'" hidden></div>' : '';
+  return '<div class="exname">'+esc(name)+(hasImg?'<button type="button" class="howbtn" data-how="'+id+'" aria-expanded="false" aria-controls="how-'+id+'">📷 Como fazer</button>':'')+'</div><div class="scheme">'+
+    sets.map(([t,r])=>'<span class="set'+(t==='V'?' V':'')+'">'+(t==='V'?LABEL[t]+' '+r:'<b>'+LABEL[t]+'</b> '+r)+'</span>').join('')+
+    '</div><div class="log">'+
+    '<label class="field" for="kg-'+id+'">Carga<input id="kg-'+id+'" inputmode="decimal" placeholder="kg" value="'+esc(cur.kg??'')+'" data-s="'+id+'" data-f="kg"></label>'+
+    '<label class="field" for="rp-'+id+'">Reps<input id="rp-'+id+'" inputmode="numeric" placeholder="'+val+'" value="'+esc(cur.reps??'')+'" data-s="'+id+'" data-f="reps"></label>'+
+    '<span class="last">'+lastTxt+'</span>'+up+'</div>'+how;
+}
+function toggleHow(btn){
+  const box = document.getElementById('how-'+btn.dataset.how);
+  if(!box) return;
+  if(!box.dataset.ready){
+    const id = btn.dataset.how, nm = box.dataset.name, note = PROFILES[PROFILE].imgs[id];
+    box.innerHTML = '<div class="pics"><figure><img src="img/'+id+'-0.webp" alt="'+nm+': posição inicial" loading="lazy" width="420" height="280"><figcaption>Início</figcaption></figure>'+
+      '<figure><img src="img/'+id+'-1.webp" alt="'+nm+': posição final" loading="lazy" width="420" height="280"><figcaption>Fim</figcaption></figure></div>'+
+      (note ? '<div class="note">'+esc(note)+'</div>' : '')+
+      '<div class="links"><a href="https://www.youtube.com/results?search_query='+encodeURIComponent(nm+' execução academia')+'" target="_blank" rel="noopener">▶ Ver em vídeo ↗</a><span>Fotos: Free Exercise DB (domínio público)</span></div>';
+    box.dataset.ready = '1';
+  }
+  box.hidden = !box.hidden;
+  btn.setAttribute('aria-expanded', String(!box.hidden));
 }
 
 function renderPanel(){
@@ -340,25 +432,23 @@ function renderPanel(){
     return;
   }
   const s = sessions[k] || {treino:w, feito:false, ex:{}};
-  const ex = W[w];
-  let html = '<div class="ph"><div class="plate '+w+'">'+w+'</div><div class="grow"><h2>'+NAMES[w]+'</h2><div class="when">'+whenTxt+' · '+ex.length+' exercícios</div></div>'+
+  const items = W[w];
+  const nEx = flatEx(w).length;
+  const countTxt = items.length===nEx ? nEx+' exercícios' : items.length+' aparelhos · '+nEx+' exercícios';
+  let html = '<div class="ph"><div class="plate '+w+'">'+w+'</div><div class="grow"><h2>'+NAMES[w]+'</h2><div class="when">'+whenTxt+' · '+countTxt+'</div></div>'+
     '<button type="button" class="donebtn'+(s.feito?' on':'')+'" id="done">'+(s.feito?'✓ Feito':'Marcar feito')+'</button></div><ol class="ex">';
-  ex.forEach(([name, sets], i)=>{
-    const id = slug(name);
-    const cur = (s.ex && s.ex[id]) || {};
-    const val = sets.find(x=>x[0]==='V')[1];
-    const last = lastFor(w, id, k);
-    let lastTxt = last ? 'Última ('+fmt(new Date(last.k+'T12:00'))+'): '+(last.kg!==''&&last.kg!=null?last.kg+' kg':'—')+' × '+(last.reps!==''&&last.reps!=null?last.reps:'—') : 'Sem registro anterior';
-    const up = last && +last.reps >= val ? '<span class="up">↑ bateu '+val+' reps: suba a carga</span>' : '';
-    html += '<li><span class="n">'+String(i+1).padStart(2,'0')+'</span><div><div class="exname">'+name+'</div><div class="scheme">'+
-      sets.map(([t,r])=>'<span class="set'+(t==='V'?' V':'')+'">'+(t==='V'?LABEL[t]+' '+r:'<b>'+LABEL[t]+'</b> '+r)+'</span>').join('')+
-      '</div></div><div class="log">'+
-      '<label class="field" for="kg-'+id+'">Carga<input id="kg-'+id+'" inputmode="decimal" placeholder="kg" value="'+(cur.kg??'')+'" data-s="'+id+'" data-f="kg"></label>'+
-      '<label class="field" for="rp-'+id+'">Reps<input id="rp-'+id+'" inputmode="numeric" placeholder="'+val+'" value="'+(cur.reps??'')+'" data-s="'+id+'" data-f="reps"></label>'+
-      '<span class="last">'+lastTxt+'</span>'+up+'</div></li>';
+  items.forEach((it, i)=>{
+    const n = '<span class="n">'+String(i+1).padStart(2,'0')+'</span>';
+    if(it.c){
+      html += '<li class="conj">'+n+'<div><div class="conjhead"><b>Conjugado</b><span>sem descanso entre os dois'+(it.nota?' · '+esc(it.nota):'')+'</span></div>'+
+        it.c.map(([nm, st])=>'<div class="conjpart">'+exBlock(nm, st, s, w, k)+'</div>').join('')+'</div></li>';
+    } else {
+      html += '<li>'+n+'<div>'+exBlock(it[0], it[1], s, w, k).replace('<div class="log">','</div><div class="log">')+'</li>';
+    }
   });
   html += '</ol>';
   p.innerHTML = html;
+  p.querySelectorAll('.howbtn').forEach(b=>{ b.onclick = ()=>toggleHow(b); });
   if(typeof window.afterPanel === 'function') window.afterPanel(p, d, w, k);
   p.querySelectorAll('input[data-s]').forEach(inp=>{
     inp.addEventListener('input', ()=>{
@@ -372,14 +462,14 @@ function renderPanel(){
   document.getElementById('done').onclick = ()=>{
     const ss = sessions[k] || (sessions[k] = {treino:w, feito:false, ex:{}});
     ss.treino = w; ss.feito = !ss.feito;
-    queueSave(k); clearTimeout(timers[k]); flush(k);
+    clearTimeout(timers[k]); delete timers[k]; flush(k);
     renderStrip(); renderStats();
     const b=document.getElementById('done'); b.classList.toggle('on',ss.feito); b.textContent = ss.feito?'✓ Feito':'Marcar feito';
   };
 }
 
 function renderStats(){
-  document.getElementById('stDone').textContent = Object.values(sessions).filter(s=>s.feito).length;
+  document.getElementById('stDone').textContent = Object.values(sessions).filter(s=>s && s.feito).length;
   const nx = nextWorkout(today<START?START:today);
   document.getElementById('stNext').textContent = nx ? nx.w+' · '+(+nx.d===+today?'hoje':fmt(nx.d)) : '—';
 }
@@ -389,23 +479,21 @@ document.getElementById('next').onclick = ()=>{ winStart = addDays(winStart,7); 
 
 // ---------- nome do atleta ----------
 let athlete = '';
-const LS_NAME = 'fullbody-abc-nome';
 const nameIn = document.getElementById('athName');
 function setAthlete(n){
   athlete = String(n||'').slice(0,40);
   if(document.activeElement!==nameIn) nameIn.value = athlete;
-  try{ localStorage.setItem(LS_NAME, athlete); }catch(e){}
+  try{ localStorage.setItem(lsNameKey(), athlete); }catch(e){}
 }
 nameIn.addEventListener('input', ()=>{
   athlete = nameIn.value.trim().slice(0,40);
-  try{ localStorage.setItem(LS_NAME, athlete); }catch(e){}
+  try{ localStorage.setItem(lsNameKey(), athlete); }catch(e){}
   clearTimeout(timers.config); timers.config = setTimeout(()=>flush('config'), 800);
 });
-try{ setAthlete(localStorage.getItem(LS_NAME)||''); }catch(e){}
 
 // ---------- copiar / importar registros ----------
 function encodeData(){
-  const json = JSON.stringify({i:key(START), n:athlete||undefined, s:sessions});
+  const json = JSON.stringify({p:PROFILE, i:key(START), n:athlete||undefined, s:sessions});
   let bin = ''; new TextEncoder().encode(json).forEach(b=>{ bin += String.fromCharCode(b); });
   return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
@@ -430,7 +518,11 @@ function mergeData(data){
   return n;
 }
 function importCode(code){
-  const n = mergeData(decodeData(code));
+  const data = decodeData(code);
+  // código de outro treino: troca para ele antes de juntar (códigos antigos, sem treino, são do Geral)
+  const target = PROFILES[data.p] ? data.p : 'geral';
+  if(target !== PROFILE) applyProfile(target);
+  const n = mergeData(data);
   lsSave(); lsSaveStart();
   if(col){ Object.keys(sessions).forEach(k=>flush(k)); flush('config'); }
   render();
@@ -455,7 +547,7 @@ document.getElementById('expBtn').addEventListener('click', ()=>{
 document.getElementById('impBtn').addEventListener('click', ()=>{
   const inp = document.getElementById('impIn'), msg = document.getElementById('impMsg');
   if(!inp.value.trim()){ msg.textContent = 'Cole um código primeiro.'; return; }
-  try{ const n = importCode(inp.value); msg.textContent = n ? 'Importado: '+n+' treino(s).' : 'O código não tinha treinos.'; inp.value=''; }
+  try{ const n = importCode(inp.value); document.getElementById('impMsg').textContent = n ? 'Importado: '+n+' treino(s).' : 'O código não tinha treinos.'; inp.value=''; }
   catch(e){ msg.textContent = 'Código inválido. Confira se copiou inteiro.'; }
 });
 
@@ -465,14 +557,78 @@ document.getElementById('startDate').addEventListener('change', e=>{
   clearTimeout(timers.config); flush('config');
 });
 
-sessions = lsLoad();
-setStart(lsStart() || (hasOld() ? new Date(2026,10,7) : today));
-if(!lsStart() && hasOld()) lsSaveStart();
-lsSave();
-render();
-importFromHash();
+// ---------- escolha do treino ----------
+function renderChooser(){
+  document.getElementById('cards').innerHTML = Object.entries(PROFILES).map(([id,p])=>
+    '<button type="button" class="pcard" data-p="'+id+'"><div class="plate '+p.cls+'">'+p.mark+'</div><div><h2>'+esc(p.label)+'</h2><p>'+esc(p.sub)+'</p></div><span class="go" aria-hidden="true">›</span></button>'
+  ).join('');
+  document.querySelectorAll('.pcard').forEach(b=>b.onclick = ()=>{ applyProfile(b.dataset.p); showApp(); });
+}
+function showChooser(){ document.getElementById('app').hidden = true; document.getElementById('chooser').hidden = false; window.scrollTo(0,0); }
+function showApp(){ document.getElementById('chooser').hidden = true; document.getElementById('app').hidden = false; window.scrollTo(0,0); }
+document.getElementById('switchBtn').onclick = showChooser;
 
-// ---------- registros de cada pessoa (privados) ----------
+let remoteDocs = null; const pushedProfiles = {};
+function applyProfile(p){
+  PROFILE = PROFILES[p] ? p : 'geral';
+  try{ localStorage.setItem(LS_PROFILE, PROFILE); }catch(e){}
+  const P = PROFILES[PROFILE];
+  W = P.W;
+  document.getElementById('title').textContent = P.title;
+  document.getElementById('subtitle').textContent = P.sub + ' · 2 dias de treino, 1 de descanso';
+  sessions = lsLoad();
+  let nm = ''; try{ nm = localStorage.getItem(lsNameKey()) || ''; }catch(e){}
+  setAthlete(nm || P.nome);
+  setStart(lsStart() || (hasOld() ? new Date(2026,10,7) : today));
+  if(!lsStart()) lsSaveStart();
+  lsSave();
+  if(remoteDocs) applyRemote(remoteDocs);
+  render();
+  if(typeof window.onProfileChange === 'function') window.onProfileChange(PROFILE);
+}
+
+// documentos da conta (app do Claude) → registros do treino atual
+function applyRemote(docs){
+  const cfgId = docId('config'), pre = PROFILE==='geral' ? 's-' : PROFILE+'-s-';
+  const fresh = {};
+  docs.forEach(({id, v})=>{
+    if(id===cfgId){
+      const s = parseKey(v && v.inicio);
+      if(s && +s !== +START && !writing[cfgId] && !pending[cfgId]){ setStart(s); lsSaveStart(); }
+      if(v && typeof v.nome==='string' && v.nome && v.nome!==athlete && !writing[cfgId] && !pending[cfgId] && document.activeElement!==nameIn){ setAthlete(v.nome); }
+    } else if(id.startsWith(pre) && /^\d{4}-\d{2}-\d{2}$/.test(id.slice(pre.length))) fresh[id.slice(pre.length)] = v;
+  });
+  if(!docs.some(x=>x.id===cfgId)) flush('config');
+  // registros que só existem neste aparelho sobem para a conta (uma vez por treino)
+  if(!pushedProfiles[PROFILE]){
+    pushedProfiles[PROFILE] = true;
+    Object.keys(sessions).forEach(k=>{
+      if(!sessions[k]) return;
+      const remote = fresh[k];
+      if(!remote){ fresh[k] = sessions[k]; flush(k); }
+      else {
+        const merged = {treino:remote.treino||sessions[k].treino, feito:!!(remote.feito||sessions[k].feito), ex:Object.assign({}, sessions[k].ex||{}, remote.ex||{})};
+        if(JSON.stringify(merged) !== JSON.stringify(remote)){ fresh[k] = merged; flush(k); }
+      }
+    });
+  }
+  Object.keys(sessions).forEach(k=>{ const id = docId(k); if(writing[id]||pending[id]||timers[k]) fresh[k] = sessions[k]; });
+  sessions = Object.assign({}, sessions, fresh);
+  lsSave();
+}
+
+// ---------- início ----------
+renderChooser();
+(function start(){
+  let saved = null; try{ saved = localStorage.getItem(LS_PROFILE); }catch(e){}
+  const fromHash = /^#importar=/.test(location.hash);
+  if(saved && PROFILES[saved]){ applyProfile(saved); showApp(); }
+  else if(fromHash){ applyProfile('geral'); showApp(); }
+  else { applyProfile('geral'); showChooser(); }
+  importFromHash();
+})();
+
+// ---------- registros de cada pessoa na conta (app do Claude) ----------
 (async ()=>{
   let user = null, uid = null;
   try{
@@ -483,41 +639,17 @@ importFromHash();
   }catch(e){ db = null; }
   if(!db || !uid){ goLocal(); return; }
   col = db.collection('data/users/'+uid);
-  let loaded = false, pushedLocal = false;
+  let loaded = false;
   const timer = setTimeout(()=>{ if(!loaded) status('Não foi possível carregar seus registros ainda. Continue anotando; fica salvo neste aparelho.'); }, 10000);
   col.onSnapshot(snap=>{
-    if(!snap.metadata.fromCache){ loaded = true; clearTimeout(timer); }
-    const fresh = {};
-    snap.docs.forEach(d=>{
-      const v = d.data();
-      if(d.id==='config'){
-        const s = parseKey(v && v.inicio);
-        if(s && +s !== +START && !writing.config && !pending.config){ setStart(s); lsSaveStart(); }
-        if(v && typeof v.nome==='string' && v.nome!==athlete && !writing.config && !pending.config && document.activeElement!==nameIn){ setAthlete(v.nome); }
-      } else if(d.id.startsWith('s-')) fresh[d.id.slice(2)] = JSON.parse(JSON.stringify(v));
-    });
-    if(loaded && snap.empty && lsStart()){ flush('config'); }
-    // registros que só existem neste aparelho sobem para a conta (uma vez por carregamento)
-    if(loaded && !pushedLocal){
-      pushedLocal = true;
-      Object.keys(sessions).forEach(k=>{
-        if(!/^\d{4}-\d{2}-\d{2}$/.test(k) || !sessions[k]) return;
-        const remote = fresh[k];
-        if(!remote){ fresh[k] = sessions[k]; flush(k); }
-        else {
-          const merged = {treino:remote.treino||sessions[k].treino, feito:!!(remote.feito||sessions[k].feito), ex:Object.assign({}, sessions[k].ex||{}, remote.ex||{})};
-          if(JSON.stringify(merged) !== JSON.stringify(remote)){ fresh[k] = merged; sessions[k] = merged; flush(k); }
-        }
-      });
-    }
-    // mantém o que está sendo digitado
-    Object.keys(timers).forEach(k=>{ if(k!=='config' && sessions[k] && (writing[k]||pending[k])) fresh[k]=sessions[k]; });
+    if(snap.metadata.fromCache) return;
+    loaded = true; clearTimeout(timer);
+    remoteDocs = snap.docs.map(d=>({id:d.id, v:JSON.parse(JSON.stringify(d.data()))}));
     const typing = document.activeElement && document.activeElement.tagName==='INPUT';
-    sessions = Object.assign({}, sessions, fresh);
-    lsSave();
+    applyRemote(remoteDocs);
     renderStrip(); renderStats();
     if(!typing) renderPanel();
-    if(loaded && !document.getElementById('status').textContent.startsWith('Salv')) status('Sincronizado.');
+    if(!document.getElementById('status').textContent.startsWith('Salv')) status('Sincronizado.');
   }, err=>{ clearTimeout(timer); goLocal(); });
 })();
 </script>
