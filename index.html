@@ -209,8 +209,8 @@ li.conj{grid-template-columns:28px minmax(0,1fr)}
     <summary>Como executar as séries</summary>
     <div class="ref">
       <div>
-        <h3>Ciclo</h3>
-        <div class="cyc" aria-label="Ciclo de 9 dias"><span class="A">A</span><span class="B">B</span><span class="off">off</span><span class="C">C</span><span class="A">A</span><span class="off">off</span><span class="B">B</span><span class="C">C</span><span class="off">off</span></div>
+        <h3 id="cycTitle">Ciclo</h3>
+        <div class="cyc" id="cycBox" aria-label="Ciclo de 9 dias"><span class="A">A</span><span class="B">B</span><span class="off">off</span><span class="C">C</span><span class="A">A</span><span class="off">off</span><span class="B">B</span><span class="C">C</span><span class="off">off</span></div>
       </div>
       <div class="legend">
         <span class="set"><b>AQ</b> aquecimento</span>
@@ -269,6 +269,7 @@ const PROFILES = {
     }},
   geral:{label:'Geral', mark:'G', cls:'ger', title:'Full Body ABC', nome:'',
     sub:'Treino para os amigos · 8 exercícios por dia',
+    semana:{1:'A',3:'B',5:'C'}, // segunda A, quarta B, sexta C; demais dias descanso
     W:{
       A:[['Agachamento livre',S.aq12_8_6],['Stiff barra livre',S.p12_10_8],['Supino inclinado convergente',S.aq12_10_8],['Remada curvada barra guiada',S.aq12_10_8],['Desenvolvimento convergente',S.p10_8],['Rosca direta barra W',S.p10_8],['Tríceps testa barra W',S.p10_8],['Gêmeos em pé',S.p20_15_12]],
       B:[['Leg press',S.aq15_10_8],['Flexora deitada',S.aq15_12_10],['Supino reto com halteres',S.aq12_10_8],['Puxador frontal pegada pronada',S.aq12_10_8],['Elevação lateral',S.p15_12_10],['Rosca Scott',S.p12_10],['Tríceps no pulley',S.p12_10],['Gêmeos sentado',S.p25_20_15]],
@@ -292,7 +293,13 @@ const addDays = (d,n) => new Date(d.getFullYear(), d.getMonth(), d.getDate()+n);
 const diffDays = (a,b) => Math.round((atMidnight(a)-atMidnight(b))/dayMs);
 const key = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const fmt = d => String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');
-const workoutOf = d => { const i = diffDays(d, START); return i < 0 ? undefined : CYCLE[i % 9]; };
+const weekPlan = () => (PROFILE && PROFILES[PROFILE].semana) || null;
+const workoutOf = d => {
+  const i = diffDays(d, START);
+  if(i < 0) return undefined;
+  const sem = weekPlan();
+  return sem ? (sem[d.getDay()] || null) : CYCLE[i % 9];
+};
 
 const today = atMidnight(new Date());
 const parseKey = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s||''); return m ? new Date(+m[1], +m[2]-1, +m[3]) : null; };
@@ -304,7 +311,9 @@ function setStart(d, keepSel){
   START = atMidnight(d);
   document.getElementById('startDate').value = key(START);
   if(!keepSel) selected = today < START ? START : today;
-  winStart = addDays(START, Math.floor(Math.max(0,diffDays(selected, START))/7)*7);
+  winStart = weekPlan()
+    ? addDays(selected, -((selected.getDay()+6)%7))            // semana de segunda a domingo
+    : addDays(START, Math.floor(Math.max(0,diffDays(selected, START))/7)*7);
 }
 
 // ---------- persistência (separada por treino) ----------
@@ -575,7 +584,17 @@ function applyProfile(p){
   const P = PROFILES[PROFILE];
   W = P.W;
   document.getElementById('title').textContent = P.title;
-  document.getElementById('subtitle').textContent = P.sub + ' · 2 dias de treino, 1 de descanso';
+  document.getElementById('subtitle').textContent = P.sub + (P.semana ? ' · treinos seg, qua e sex' : ' · 2 dias de treino, 1 de descanso');
+  const cyc = document.getElementById('cycBox');
+  if(P.semana){
+    document.getElementById('cycTitle').textContent = 'Semana (seg a dom)';
+    cyc.setAttribute('aria-label', 'Segunda A, quarta B, sexta C; demais dias descanso');
+    cyc.innerHTML = [1,2,3,4,5,6,0].map(dw=>{ const l = P.semana[dw]; return '<span class="'+(l||'off')+'" title="'+DOWL[dw]+'">'+(l||DOW[dw])+'</span>'; }).join('');
+  } else {
+    document.getElementById('cycTitle').textContent = 'Ciclo';
+    cyc.setAttribute('aria-label', 'Ciclo de 9 dias');
+    cyc.innerHTML = CYCLE.map(l=>'<span class="'+(l||'off')+'">'+(l||'off')+'</span>').join('');
+  }
   sessions = lsLoad();
   let nm = ''; try{ nm = localStorage.getItem(lsNameKey()) || ''; }catch(e){}
   setAthlete(nm || P.nome);
