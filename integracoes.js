@@ -272,7 +272,7 @@
       const r = await fetch("/api/dados/" + cloudKey, {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ p: PROFILE, i: key(START), n: athlete || undefined, s: sessions }),
+        body: JSON.stringify({ p: PROFILE, i: key(START), n: athlete || undefined, d: dias, s: sessions }),
       });
       if (!r.ok) throw new Error(r.status);
       setCloud("☁ Treinos salvos na nuvem às " + hhmm(new Date()) + ".");

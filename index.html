@@ -19,7 +19,7 @@
 /* Layout: caderno de treino de academia — faixa de dias no topo, treino do dia em lista, cores de anilha olímpica para A/B/C */
 :root{
   --bg:#F2F4F6; --surface:#FFFFFF; --ink:#16212B; --muted:#5D6A76; --line:#DCE1E6;
-  --a:#C8372D; --b:#1F5FBF; --c:#C7900F; --rest:#8A96A1; --ok:#2E8A57;
+  --a:#C8372D; --b:#1F5FBF; --c:#C7900F; --d:#6E4FC2; --rest:#8A96A1; --ok:#2E8A57;
   --a-soft:#FBE9E7; --b-soft:#E6EEFA; --c-soft:#FBF2DC;
   --surface-glass:rgba(255,255,255,.80); --bg-img-op:.16; --bg-img-filter:none;
   --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
@@ -27,12 +27,12 @@
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0F151B; --surface:#18212A; --ink:#E8EDF2; --muted:#93A1AE; --line:#2A3540;
-  --a:#EF6B60; --b:#6C9EEB; --c:#E8B847; --rest:#6F7C88; --ok:#5CC28A;
+  --a:#EF6B60; --b:#6C9EEB; --c:#E8B847; --d:#A88BEA; --rest:#6F7C88; --ok:#5CC28A;
   --a-soft:#3A1F1D; --b-soft:#1B2A40; --c-soft:#3A2F14;
   --surface-glass:rgba(24,33,42,.80); --bg-img-op:.14; --bg-img-filter:invert(1); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0F151B; --surface:#18212A; --ink:#E8EDF2; --muted:#93A1AE; --line:#2A3540;
-  --a:#EF6B60; --b:#6C9EEB; --c:#E8B847; --rest:#6F7C88; --ok:#5CC28A;
+  --a:#EF6B60; --b:#6C9EEB; --c:#E8B847; --d:#A88BEA; --rest:#6F7C88; --ok:#5CC28A;
   --a-soft:#3A1F1D; --b-soft:#1B2A40; --c-soft:#3A2F14;
   --surface-glass:rgba(24,33,42,.80); --bg-img-op:.14; --bg-img-filter:invert(1); color-scheme:dark}
 *{box-sizing:border-box}
@@ -70,7 +70,7 @@ h1{font-family:var(--display);font-weight:700;font-size:40px;line-height:1;margi
 .day .dw{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
 .day .dd{font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted)}
 .day .lt{font-family:var(--display);font-weight:700;font-size:26px;line-height:1}
-.day.A .lt{color:var(--a)} .day.B .lt{color:var(--b)} .day.C .lt{color:var(--c)}
+.day.A .lt{color:var(--a)} .day.B .lt{color:var(--b)} .day.C .lt{color:var(--c)} .day.D .lt{color:var(--d)} .day.two .lt{font-size:21px}
 .day.off .lt{color:var(--rest);font-size:15px;line-height:26px;font-family:var(--body);font-weight:500}
 .day.pre{opacity:.4}
 .day.today{border-color:var(--ink)}
@@ -82,7 +82,7 @@ h1{font-family:var(--display);font-weight:700;font-size:40px;line-height:1;margi
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .ph{display:flex;align-items:center;gap:14px;padding:16px 18px;border-bottom:1px solid var(--line)}
 .plate{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:30px;color:#fff;flex:none;box-shadow:inset 0 0 0 5px rgba(255,255,255,.18)}
-.plate.A{background:var(--a)} .plate.B{background:var(--b)} .plate.C{background:var(--c)} .plate.off{background:var(--rest);font-size:20px}
+.plate.A{background:var(--a)} .plate.B{background:var(--b)} .plate.C{background:var(--c)} .plate.D{background:var(--d)} .plate.two{font-size:24px} .plate.off{background:var(--rest);font-size:20px}
 .ph h2{font-family:var(--display);font-size:28px;margin:0;line-height:1;text-transform:uppercase;letter-spacing:.3px}
 .ph .when{color:var(--muted);font-size:13px;margin-top:3px}
 .ph .grow{flex:1;min-width:0}
@@ -116,7 +116,9 @@ details[open] summary{border-bottom:1px solid var(--line)}
 .ref h3{font-family:var(--display);text-transform:uppercase;font-size:17px;margin:0;letter-spacing:.3px}
 .cyc{display:flex;flex-wrap:wrap;gap:6px}
 .cyc span{font-family:var(--display);font-weight:700;font-size:17px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:#fff}
-.cyc .A{background:var(--a)} .cyc .B{background:var(--b)} .cyc .C{background:var(--c)} .cyc .off{background:transparent;border:1px dashed var(--rest);color:var(--rest);font-size:13px}
+.cyc .A{background:var(--a)} .cyc .B{background:var(--b)} .cyc .C{background:var(--c)} .cyc .D{background:var(--d)} .cyc .two{font-size:14px;width:36px;height:36px} .cyc .off{width:auto;padding:0 10px;border-radius:999px}
+.restlink{margin-top:6px;border:0;background:none;padding:0;color:var(--muted);font:inherit;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.restlink:focus-visible{outline:2px solid var(--b);outline-offset:2px} .cyc .off{background:transparent;border:1px dashed var(--rest);color:var(--rest);font-size:13px}
 @media (max-width:440px){h1{font-size:32px}.day .lt{font-size:22px}.ph{padding:14px}.plate{width:46px;height:46px;font-size:24px}ol.ex li{padding:12px 14px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -235,7 +237,7 @@ li.conj{grid-template-columns:28px minmax(0,1fr)}
 <script>
 let START = null;
 const CYCLE = ['A','B',null,'C','A',null,'B','C',null];
-const NAMES = {A:'Full Body A',B:'Full Body B',C:'Full Body C'};
+const NAMES = {}; // preenchido conforme o treino escolhido
 // séries: [tipo, reps] com tipo AQ | P | V. Item: ['Nome', séries] ou {c:[[nome, séries],[nome, séries]], nota}
 const S = {
   aq12_8_6:[['AQ',12],['P',8],['V',6]], aq12_10_8:[['AQ',12],['P',10],['V',8]], aq15_10_8:[['AQ',15],['P',10],['V',8]],
@@ -246,26 +248,37 @@ const S = {
 const PROFILES = {
   danielson:{label:'Danielson', mark:'D', cls:'dan', title:'Treino Danielson', nome:'Danielson',
     sub:'Exercícios do Simon · 6 aparelhos por dia · conjugado de braço',
+    seq:['A1','B1','C1','A2','B2','C2'], resumo:'6 treinos e 1 folga por semana (você escolhe o dia)',
     W:{
-      A:[['Agachamento Smith',S.aq12_8_6],['Mesa flexora',S.aq15_12_10],['Supino máquina neutro',S.aq12_10_8],['Puxada articulada supinada',S.aq12_10_8],['Desenvolvimento máquina',S.p10_8],
+      A1:[['Agachamento Smith',S.aq12_8_6],['Mesa flexora',S.aq15_12_10],['Supino máquina neutro',S.aq12_10_8],['Puxada articulada supinada',S.aq12_10_8],['Desenvolvimento máquina',S.p10_8],
          {c:[['Rosca direta cross barra W',S.p12_10],['Tríceps pulley',S.p12_10]], nota:'Mesma polia: só troque o pegador'}],
-      B:[['Leg 45',S.aq15_10_8],['Cadeira flexora',S.aq15_12_10],['Supino inclinado com dumbbell',S.aq12_10_8],['Remada baixa fechada sentada',S.aq12_10_8],['Elevação lateral máquina',S.p15_12_10],
+      B1:[['Leg 45',S.aq15_10_8],['Cadeira flexora',S.aq15_12_10],['Supino inclinado com dumbbell',S.aq12_10_8],['Remada baixa fechada sentada',S.aq12_10_8],['Elevação lateral máquina',S.p15_12_10],
          {c:[['Rosca alternada',S.p12_10],['Tríceps testa corda cross',S.p12_10]], nota:'Halteres ao lado do cross'}],
-      C:[['Hack',S.aq12_10_8],['Pantu em pé',S.p20_15_12],['Supino articulado inclinado',S.aq12_10_8],['Remada supinada articulada',S.aq12_10_8],['Crucifixo inverso máquina',S.p12_10],
-         {c:[['Rosca martelo alternada sentado',S.p12_10],['Paralela + banco',S.p12_10]], nota:'Halteres e banco, sem máquina'}]
+      C1:[['Hack',S.aq12_10_8],['Pantu em pé',S.p20_15_12],['Supino articulado inclinado',S.aq12_10_8],['Remada supinada articulada',S.aq12_10_8],['Crucifixo inverso máquina',S.p12_10],
+         {c:[['Rosca martelo alternada sentado',S.p12_10],['Paralela + banco',S.p12_10]], nota:'Halteres e banco, sem máquina'}],
+      A2:[['Agachamento livre',S.aq12_8_6],['Stiff barra livre',S.p12_10_8],['Supino reto barra',S.aq12_10_8],['Puxada fechada',S.aq12_10_8],['Desenvolvimento com dumbbell sentado',S.p12_10],
+         {c:[['Rosca simultânea sentado',S.p12_10],['Tríceps corda',S.p12_10]], nota:'Halteres ao lado da polia'}],
+      B2:[['Agachamento horizontal máquina',S.aq15_10_8],['Elevação pelve máquina',S.p12_10_8],['Crucifixo máquina',S.p12_10],['Remada curvada aberta barra',S.aq12_10_8],['Elevação frontal alternada',S.p12_10],
+         {c:[['Rosca direta W',S.p12_10],['Tríceps banco',S.p12_10]], nota:'Barra W e banco, sem máquina'}],
+      C2:[['Extensora',S.aq15_12_10],['Pantu sentado',S.p20_15_12],['Supino reto articulado',S.aq12_10_8],['Puxada aberta',S.aq12_10_8],['Remada alta barra reta cross',S.p12_10],
+         {c:[['Rosca Scott máquina',S.p12_10],['Tríceps coice',S.p12_10]], nota:'Coice com halter ao lado do Scott'}]
     }},
   viviane:{label:'Viviane', mark:'V', cls:'viv', title:'Treino Viviane', nome:'Viviane',
     sub:'Exercícios do Simon · 6 aparelhos por dia · foco em glúteo e perna',
+    seq:['A','B','C','D'], fimDeSemana:true, resumo:'Treinos de segunda a sexta com 1 folga (você escolhe o dia)',
     // fotos de execução (Free Exercise DB, domínio público) + observação quando a foto difere do aparelho
     imgs:{'agachamento-hack':'','elevacao-pelve-maquina':'A foto é com barra livre; na máquina o movimento é o mesmo.','abdutora':'','supino-teto-articulado':'',
       'puxada-aberta':'','elevacao-lateral':'','leg-45':'','mesa-flexora':'','adutora':'','remada-baixa-fechada':'','desenvolvimento-maquina':'',
       'rosca-direta-cross':'','triceps-pulley':'','afundo-smith':'Na foto o pé de trás está apoiado no banco; no afundo ele fica no chão.',
-      'cadeira-flexora':'','panturrilha-em-pe':'','abdomen-reto-chao':''},
+      'cadeira-flexora':'','panturrilha-em-pe':'','abdomen-reto-chao':'',
+      'extensora':'','supino-reto-maquina':'','puxada-fechada':'','crucifixo-inverso-maquina':'',
+      'remada-baixa-aberta-maquina':'','supino-reto-articulado':'','elevacao-frontal-alternada':'A foto é com os dois braços juntos; alterne um braço de cada vez.'},
     W:{
-      A:[['Agachamento hack',S.aq12_10_8],['Elevação pelve máquina',S.p12_10_8],['Abdutora',S.p15_12],['Supino teto articulado',S.aq12_10_8],['Puxada aberta',S.aq12_10_8],['Elevação lateral',S.p15_12_10]],
-      B:[['Leg 45',S.aq15_10_8],['Mesa flexora',S.aq15_12_10],['Adutora',S.p15_12],['Remada baixa fechada',S.aq12_10_8],['Desenvolvimento máquina',S.p12_10],
+      A:[['Extensora',S.aq15_12_10],['Agachamento hack',S.aq12_10_8],['Elevação pelve máquina',S.p12_10_8],['Supino reto articulado',S.aq12_10_8],['Puxada aberta',S.aq12_10_8],['Elevação lateral',S.p15_12_10]],
+      B:[['Cadeira flexora',S.aq15_12_10],['Afundo Smith',S.aq12_10_8],['Abdutora',S.p15_12],['Remada baixa fechada',S.aq12_10_8],['Desenvolvimento máquina',S.p12_10],
          {c:[['Rosca direta cross',S.p12_10],['Tríceps pulley',S.p12_10]], nota:'Mesma polia: só troque o pegador'}],
-      C:[['Afundo Smith',S.aq12_10_8],['Cadeira flexora',S.aq15_12_10],['Panturrilha em pé',S.p18_15_12],['Supino teto articulado',S.aq12_10_8],['Remada baixa fechada',S.p12_10],['Abdômen reto chão',S.p20_15]]
+      C:[['Extensora',S.aq15_12_10],['Leg 45',S.aq15_10_8],['Adutora',S.p15_12],['Supino reto máquina',S.aq12_10_8],['Puxada fechada',S.aq12_10_8],['Crucifixo inverso máquina',S.p12_10]],
+      D:[['Mesa flexora',S.p20_15_12],['Leg 90',S.aq12_10_8],['Panturrilha em pé',S.p18_15_12],['Remada baixa aberta máquina',S.aq12_10_8],['Elevação frontal alternada',S.p12_10],['Abdômen reto chão',S.p20_15]]
     }},
   geral:{label:'Geral', mark:'G', cls:'ger', title:'Full Body ABC', nome:'',
     sub:'Treino para os amigos · 8 exercícios por dia',
@@ -294,12 +307,29 @@ const diffDays = (a,b) => Math.round((atMidnight(a)-atMidnight(b))/dayMs);
 const key = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const fmt = d => String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');
 const weekPlan = () => (PROFILE && PROFILES[PROFILE].semana) || null;
-const workoutOf = d => {
+// Folgas escolhidas: dias[data] = 'off' (folga) ou 'on' (treinar num dia que seria folga)
+let dias = {};
+function defaultRest(d){ const P = PROFILES[PROFILE]; return !!(P && P.fimDeSemana && (d.getDay()===0 || d.getDay()===6)); }
+function isRest(d){ const o = dias[key(d)]; return o==='off' ? true : o==='on' ? false : defaultRest(d); }
+// Sequência que anda para frente: cada dia de treino pega o próximo da sequência; folga não consome.
+// Dia já anotado mantém o treino que foi feito, e a sequência continua a partir dele.
+function workoutOf(d){
   const i = diffDays(d, START);
   if(i < 0) return undefined;
   const sem = weekPlan();
-  return sem ? (sem[d.getDay()] || null) : CYCLE[i % 9];
-};
+  if(sem) return sem[d.getDay()] || null;
+  const seq = PROFILES[PROFILE].seq;
+  let idx = 0, label = null;
+  for(let j=0; j<=i; j++){
+    const dj = addDays(START, j);
+    if(isRest(dj)){ label = null; continue; }
+    const s = sessions[key(dj)];
+    if(s && s.treino && seq.includes(s.treino) && hasData(s)){ label = s.treino; idx = seq.indexOf(label)+1; }
+    else { label = seq[idx % seq.length]; idx++; }
+  }
+  return label;
+}
+function hasData(s){ return !!(s.feito || Object.values(s.ex||{}).some(v=>v && ((v.kg!=null && v.kg!=='') || (v.reps!=null && v.reps!=='')))); }
 
 const today = atMidnight(new Date());
 const parseKey = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s||''); return m ? new Date(+m[1], +m[2]-1, +m[3]) : null; };
@@ -322,6 +352,15 @@ const sfx = () => PROFILE==='geral' ? '' : '-'+PROFILE;
 const lsKey = () => 'fullbody-abc-v2'+sfx();
 const lsStartKey = () => 'fullbody-abc-inicio'+sfx();
 const lsNameKey = () => 'fullbody-abc-nome'+sfx();
+const lsDiasKey = () => 'fullbody-abc-dias'+sfx();
+function loadDias(){ try{ return JSON.parse(localStorage.getItem(lsDiasKey())||'{}') || {}; }catch(e){ return {}; } }
+function saveDias(){ try{ localStorage.setItem(lsDiasKey(), JSON.stringify(dias)); }catch(e){} if(typeof lsSave==='function') lsSave(); }
+// treinos antigos do Danielson (A, B, C) viraram A1, B1, C1 — mesmos exercícios
+function normalize(obj){
+  if(PROFILE!=='danielson') return obj;
+  Object.values(obj||{}).forEach(v=>{ if(v && ['A','B','C'].includes(v.treino)) v.treino += '1'; });
+  return obj;
+}
 const LS_OLD = 'fullbody-abc-v1';
 const docId = k => k==='config' ? (PROFILE==='geral' ? 'config' : 'config-'+PROFILE) : (PROFILE==='geral' ? 's-'+k : PROFILE+'-s-'+k);
 function lsLoad(){
@@ -356,7 +395,7 @@ async function flush(k){
   if(writing[id]){ pending[id]=true; return; }
   writing[id]=true; status('Salvando…');
   try{
-    const body = k==='config' ? {inicio:key(START), nome:athlete} : JSON.parse(JSON.stringify(sessions[k]));
+    const body = k==='config' ? {inicio:key(START), nome:athlete, dias:dias} : JSON.parse(JSON.stringify(sessions[k]));
     await col.doc(id).set(body);
     status('Salvo.');
   }catch(e){
@@ -380,7 +419,7 @@ function renderStrip(){
     const d = addDays(winStart,i), w = workoutOf(d), k = key(d);
     const b = document.createElement('button');
     b.type='button';
-    b.className = 'day '+(w===undefined?'pre':(w||'off'))+(+d===+today?' today':'')+(+d===+selected?' sel':'');
+    b.className = 'day '+(w===undefined?'pre':(w?w[0]:'off'))+(w&&w.length>1?' two':'')+(+d===+today?' today':'')+(+d===+selected?' sel':'');
     b.setAttribute('aria-label', DOWL[d.getDay()]+' '+fmt(d)+': '+(w?NAMES[w]:w===null?'descanso':'antes do início'));
     b.innerHTML = '<span class="dw">'+DOW[d.getDay()]+'</span><span class="lt">'+(w||(w===null?'off':'·'))+'</span><span class="dd">'+fmt(d)+'</span>'+(+d===+today?'<span class="todaytag">hoje</span>':'');
     if(sessions[k] && sessions[k].feito){ const t=document.createElement('span'); t.className='tick'; t.title='Feito'; b.appendChild(t); }
@@ -436,15 +475,22 @@ function renderPanel(){
   const whenTxt = DOWL[d.getDay()]+', '+fmt(d)+'/'+d.getFullYear()+(+d===+today?' · hoje':'');
   if(!w){
     const nx = nextWorkout(w===undefined?START:addDays(d,1));
-    p.innerHTML = '<div class="ph"><div class="plate off">off</div><div class="grow"><h2>'+(w===null?'Descanso':'Antes do início')+'</h2><div class="when">'+whenTxt+'</div></div></div>'+
-      '<div class="restbox"><p>'+(w===null?'Dia de recuperação. Sem musculação.':'Seu ciclo começa em '+DOWL[START.getDay()]+', '+fmt(START)+'.')+'</p><p>Próximo treino: <strong>'+NAMES[nx.w]+'</strong> em '+DOWL[nx.d.getDay()]+', '+fmt(nx.d)+'.</p></div>';
+    const flex = w===null && !weekPlan();
+    p.innerHTML = '<div class="ph"><div class="plate off">off</div><div class="grow"><h2>'+(w===null?'Folga':'Antes do início')+'</h2><div class="when">'+whenTxt+'</div></div>'+
+      (flex?'<button type="button" class="donebtn" id="restBtn">Treinar neste dia</button>':'')+'</div>'+
+      '<div class="restbox"><p>'+(w===null?(flex?'Dia de folga. A sequência continua no próximo dia de treino.':'Dia de recuperação. Sem musculação.'):'Seu ciclo começa em '+DOWL[START.getDay()]+', '+fmt(START)+'.')+'</p>'+
+      (nx?'<p>Próximo treino: <strong>'+NAMES[nx.w]+'</strong> em '+DOWL[nx.d.getDay()]+', '+fmt(nx.d)+'.</p>':'')+'</div>';
+    const rb = document.getElementById('restBtn');
+    if(rb) rb.onclick = ()=>setRest(d, false);
     return;
   }
   const s = sessions[k] || {treino:w, feito:false, ex:{}};
   const items = W[w];
   const nEx = flatEx(w).length;
   const countTxt = items.length===nEx ? nEx+' exercícios' : items.length+' aparelhos · '+nEx+' exercícios';
-  let html = '<div class="ph"><div class="plate '+w+'">'+w+'</div><div class="grow"><h2>'+NAMES[w]+'</h2><div class="when">'+whenTxt+' · '+countTxt+'</div></div>'+
+  const canRest = !weekPlan() && !hasData(s);
+  let html = '<div class="ph"><div class="plate '+w[0]+(w.length>1?' two':'')+'">'+w+'</div><div class="grow"><h2>'+NAMES[w]+'</h2><div class="when">'+whenTxt+' · '+countTxt+'</div>'+
+    (canRest?'<button type="button" class="restlink" id="restBtn">💤 Marcar folga neste dia</button>':'')+'</div>'+
     '<button type="button" class="donebtn'+(s.feito?' on':'')+'" id="done">'+(s.feito?'✓ Feito':'Marcar feito')+'</button></div><ol class="ex">';
   items.forEach((it, i)=>{
     const n = '<span class="n">'+String(i+1).padStart(2,'0')+'</span>';
@@ -458,6 +504,8 @@ function renderPanel(){
   html += '</ol>';
   p.innerHTML = html;
   p.querySelectorAll('.howbtn').forEach(b=>{ b.onclick = ()=>toggleHow(b); });
+  const rb = document.getElementById('restBtn');
+  if(rb) rb.onclick = ()=>setRest(d, true);
   if(typeof window.afterPanel === 'function') window.afterPanel(p, d, w, k);
   p.querySelectorAll('input[data-s]').forEach(inp=>{
     inp.addEventListener('input', ()=>{
@@ -475,6 +523,16 @@ function renderPanel(){
     renderStrip(); renderStats();
     const b=document.getElementById('done'); b.classList.toggle('on',ss.feito); b.textContent = ss.feito?'✓ Feito':'Marcar feito';
   };
+}
+
+// marca/desmarca folga: a sequência dos dias seguintes anda sozinha
+function setRest(d, rest){
+  const k = key(d);
+  if(rest === defaultRest(d)) delete dias[k]; else dias[k] = rest ? 'off' : 'on';
+  saveDias();
+  clearTimeout(timers.config); delete timers.config; flush('config');
+  render();
+  status(rest ? 'Folga marcada em '+fmt(d)+'. Os próximos treinos foram empurrados um dia.' : 'Treino marcado em '+fmt(d)+'. A sequência foi ajustada.');
 }
 
 function renderStats(){
@@ -502,7 +560,7 @@ nameIn.addEventListener('input', ()=>{
 
 // ---------- copiar / importar registros ----------
 function encodeData(){
-  const json = JSON.stringify({p:PROFILE, i:key(START), n:athlete||undefined, s:sessions});
+  const json = JSON.stringify({p:PROFILE, i:key(START), n:athlete||undefined, d:dias, s:sessions});
   let bin = ''; new TextEncoder().encode(json).forEach(b=>{ bin += String.fromCharCode(b); });
   return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
@@ -524,6 +582,8 @@ function mergeData(data){
   const d = parseKey(data && data.i);
   if(d) setStart(d, true);
   if(data && data.n && !athlete) setAthlete(data.n);
+  if(data && data.d && typeof data.d==='object'){ dias = Object.assign({}, data.d, dias); saveDias(); }
+  normalize(sessions);
   return n;
 }
 function importCode(code){
@@ -583,19 +643,22 @@ function applyProfile(p){
   try{ localStorage.setItem(LS_PROFILE, PROFILE); }catch(e){}
   const P = PROFILES[PROFILE];
   W = P.W;
+  Object.keys(NAMES).forEach(k=>delete NAMES[k]);
+  Object.keys(W).forEach(k=>{ NAMES[k] = (PROFILE==='geral' ? 'Full Body ' : 'Treino ')+k; });
   document.getElementById('title').textContent = P.title;
-  document.getElementById('subtitle').textContent = P.sub + (P.semana ? ' · treinos seg, qua e sex' : ' · 2 dias de treino, 1 de descanso');
+  document.getElementById('subtitle').textContent = P.sub + ' · ' + (P.semana ? 'treinos seg, qua e sex' : P.resumo);
   const cyc = document.getElementById('cycBox');
   if(P.semana){
     document.getElementById('cycTitle').textContent = 'Semana (seg a dom)';
     cyc.setAttribute('aria-label', 'Segunda A, quarta B, sexta C; demais dias descanso');
     cyc.innerHTML = [1,2,3,4,5,6,0].map(dw=>{ const l = P.semana[dw]; return '<span class="'+(l||'off')+'" title="'+DOWL[dw]+'">'+(l||DOW[dw])+'</span>'; }).join('');
   } else {
-    document.getElementById('cycTitle').textContent = 'Ciclo';
-    cyc.setAttribute('aria-label', 'Ciclo de 9 dias');
-    cyc.innerHTML = CYCLE.map(l=>'<span class="'+(l||'off')+'">'+(l||'off')+'</span>').join('');
+    document.getElementById('cycTitle').textContent = 'Sequência · '+P.resumo;
+    cyc.setAttribute('aria-label', 'Sequência '+P.seq.join(', ')+'. Ao marcar uma folga, a sequência anda para frente.');
+    cyc.innerHTML = P.seq.map(l=>'<span class="'+l[0]+(l.length>1?' two':'')+'">'+l+'</span>').join('')+'<span class="off">+ folga</span>';
   }
-  sessions = lsLoad();
+  sessions = normalize(lsLoad());
+  dias = loadDias();
   let nm = ''; try{ nm = localStorage.getItem(lsNameKey()) || ''; }catch(e){}
   setAthlete(nm || P.nome);
   setStart(lsStart() || (hasOld() ? new Date(2026,10,7) : today));
@@ -615,6 +678,7 @@ function applyRemote(docs){
       const s = parseKey(v && v.inicio);
       if(s && +s !== +START && !writing[cfgId] && !pending[cfgId]){ setStart(s); lsSaveStart(); }
       if(v && typeof v.nome==='string' && v.nome && v.nome!==athlete && !writing[cfgId] && !pending[cfgId] && document.activeElement!==nameIn){ setAthlete(v.nome); }
+      if(v && v.dias && typeof v.dias==='object' && !writing[cfgId] && !pending[cfgId] && !timers.config){ dias = Object.assign({}, v.dias); saveDias(); }
     } else if(id.startsWith(pre) && /^\d{4}-\d{2}-\d{2}$/.test(id.slice(pre.length))) fresh[id.slice(pre.length)] = v;
   });
   if(!docs.some(x=>x.id===cfgId)) flush('config');
@@ -632,7 +696,7 @@ function applyRemote(docs){
     });
   }
   Object.keys(sessions).forEach(k=>{ const id = docId(k); if(writing[id]||pending[id]||timers[k]) fresh[k] = sessions[k]; });
-  sessions = Object.assign({}, sessions, fresh);
+  sessions = normalize(Object.assign({}, sessions, fresh));
   lsSave();
 }
 
@@ -673,6 +737,6 @@ renderChooser();
 })();
 </script>
 
-<script src="integracoes.js?v=5"></script>
+<script src="integracoes.js?v=6"></script>
 </body>
 </html>
